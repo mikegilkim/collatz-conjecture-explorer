@@ -409,7 +409,7 @@ function App() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
               <button type="submit" form="collatz-form" className={`control-button inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold ${buttonPrimary}`}>
                 ▶ Run
               </button>
