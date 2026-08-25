@@ -458,17 +458,20 @@ function App() {
 
               <div id="about-collatz" className={`space-y-4 text-sm leading-6 ${mutedText}`}>
                 <p>
-                  The Collatz Conjecture is a simple iterative rule: if a number is even, divide it by 2; if it is odd, multiply by 3 and add 1.
+                  The Collatz Conjecture, also called the 3n + 1 problem, is a famous mathematical sequence where each number follows a simple rule: if it is even, divide by 2; if it is odd, multiply by 3 and add 1.
                 </p>
                 <p>
-                  The sequence eventually reaches the repeating loop 4 → 2 → 1 for every tested starting value, but it remains unproven for all positive integers.
+                  This sequence is a cornerstone of elementary number theory and is often used to explore chaotic behavior, mathematical patterns, and computational experimentation in modern mathematics and algorithms.
                 </p>
                 <p>
-                  Introduced by Lothar Collatz in 1937, it became famous for its simple rules and chaotic-looking behavior.
+                  For every tested positive integer, the sequence appears to eventually reach the repeating cycle 4 → 2 → 1, but no one has proven that this always happens for all integers. That unresolved question is why the Collatz Conjecture remains one of the most famous open problems in mathematics.
                 </p>
                 <p>
-                  <a href="https://en.wikipedia.org/wiki/Collatz_conjecture" className={isDark ? 'text-violet-300 underline underline-offset-4' : 'text-violet-700 underline underline-offset-4'}>
-                    Learn more about famous conjectures and mathematics history.
+                  Introduced by Lothar Collatz in 1937, the problem became widely studied because its rules are easy to understand yet its behavior can look unpredictable and highly complex. It connects ideas from mathematics, computer science, and dynamical systems.
+                </p>
+                <p>
+                  <a href="https://en.wikipedia.org/wiki/Collatz_conjecture" className={isDark ? 'text-violet-300 underline underline-offset-4 transition-colors hover:text-violet-200' : 'text-violet-700 underline underline-offset-4 transition-colors hover:text-violet-500'}>
+                    Learn more about famous conjectures, mathematics history, and the Collatz problem.
                   </a>
                 </p>
               </div>
@@ -604,6 +607,18 @@ function App() {
               </div>
             </div>
           </section>
+
+          <footer className="mt-6 flex justify-center">
+            <a
+              href="https://www.facebook.com/mikegilkim"
+              target="_blank"
+              rel="noreferrer"
+              className={`group inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${isDark ? 'border-violet-500/30 bg-slate-900/70 text-violet-200 hover:border-violet-400 hover:bg-violet-500/10 hover:text-white' : 'border-violet-200 bg-white text-violet-700 hover:border-violet-400 hover:bg-violet-50 hover:text-violet-900'}`}
+            >
+              <span className="text-base transition-transform duration-300 group-hover:scale-110">f</span>
+              <span>Facebook</span>
+            </a>
+          </footer>
         </div>
       </div>
     </div>
