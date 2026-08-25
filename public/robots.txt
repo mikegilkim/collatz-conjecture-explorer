@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://collatz-conjecture-explorer-b6nelo0eo-mikegilkims-projects.vercel.app/sitemap.xml

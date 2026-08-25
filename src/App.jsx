@@ -64,6 +64,37 @@ function App() {
   const [errorMessage, setErrorMessage] = useState('')
   const [shareMessage, setShareMessage] = useState('')
 
+  const structuredData = useMemo(
+    () => ({
+      '@context': 'https://schema.org',
+      '@type': ['WebApplication', 'EducationalApplication'],
+      name: 'Collatz Conjecture Explorer',
+      description:
+        'Interactive number theory visualizer that explores the Collatz Conjecture, sequence behavior, and famous mathematics problem in plain language.',
+      url: 'https://collatz-conjecture-explorer-b6nelo0eo-mikegilkims-projects.vercel.app',
+      applicationCategory: 'EducationalApplication',
+      operatingSystem: 'Web',
+      inLanguage: 'en',
+      author: {
+        '@type': 'Organization',
+        name: 'Collatz Explorer',
+      },
+      keywords: [
+        'Collatz Conjecture',
+        'Number Theory Visualizer',
+        'Mathematics Sequence',
+        'Unsolved Problems',
+        'Interactive Math',
+      ],
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+      },
+    }),
+    [],
+  )
+
   const isDark = theme === 'dark'
   const maxValue = sequence.length ? Math.max(...sequence) : 0
   const averageStepSize = getAverageStepSize(sequence)
@@ -330,7 +361,9 @@ function App() {
   const ChartComponent = chartType === 'line' ? Line : Bar
 
   return (
-    <div className={`min-h-screen px-4 py-8 transition-colors duration-300 ${isDark ? 'bg-[radial-gradient(circle_at_top,_rgba(139,92,246,0.18),_transparent_35%),linear-gradient(135deg,#020817_0%,#0f172a_40%,#111827_100%)] text-slate-100' : 'bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.12),_transparent_35%),linear-gradient(135deg,#f8fafc_0%,#eef2ff_40%,#f8fafc_100%)] text-slate-800'}`}>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <div className={`min-h-screen px-4 py-8 transition-colors duration-300 ${isDark ? 'bg-[radial-gradient(circle_at_top,_rgba(139,92,246,0.18),_transparent_35%),linear-gradient(135deg,#020817_0%,#0f172a_40%,#111827_100%)] text-slate-100' : 'bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.12),_transparent_35%),linear-gradient(135deg,#f8fafc_0%,#eef2ff_40%,#f8fafc_100%)] text-slate-800'}`}>
       <div className="mx-auto max-w-7xl">
         <div className={`overflow-hidden rounded-[32px] border p-4 shadow-2xl backdrop-blur-xl sm:p-6 lg:p-8 ${isDark ? 'border-slate-700/80 bg-slate-900/70 shadow-violet-950/30' : 'border-slate-200 bg-white/80 shadow-slate-200/80'}`}>
           <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -423,7 +456,7 @@ function App() {
                 </span>
               </div>
 
-              <div className={`space-y-4 text-sm leading-6 ${mutedText}`}>
+              <div id="about-collatz" className={`space-y-4 text-sm leading-6 ${mutedText}`}>
                 <p>
                   The Collatz Conjecture is a simple iterative rule: if a number is even, divide it by 2; if it is odd, multiply by 3 and add 1.
                 </p>
@@ -433,13 +466,20 @@ function App() {
                 <p>
                   Introduced by Lothar Collatz in 1937, it became famous for its simple rules and chaotic-looking behavior.
                 </p>
+                <p>
+                  <a href="https://en.wikipedia.org/wiki/Collatz_conjecture" className={isDark ? 'text-violet-300 underline underline-offset-4' : 'text-violet-700 underline underline-offset-4'}>
+                    Learn more about famous conjectures and mathematics history.
+                  </a>
+                </p>
               </div>
             </aside>
 
-            <section className={`rounded-2xl border p-5 shadow-sm ${subtle}`}>
+            <section className={`rounded-2xl border p-5 shadow-sm ${subtle}`} aria-labelledby="sequence-overview-title">
               <form id="collatz-form" onSubmit={handleRun} className="space-y-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Sequence overview</h2>
+                  <h2 id="sequence-overview-title" className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    Sequence overview
+                  </h2>
                   <div className="flex gap-2">
                     <button
                       type="button"
@@ -511,11 +551,18 @@ function App() {
                       </button>
                     </div>
                   </div>
-                  <div className="h-80 w-full">
-                    <ChartComponent
-                      data={chartData}
-                      options={chartOptions}
-                    />
+                  <div className="h-80 w-full" aria-live="polite">
+                    <figure className="h-full w-full">
+                      <div className="sr-only" id="sequence-chart-description">
+                        A chart showing the evolving values of the Collatz sequence for the selected starting number.
+                      </div>
+                      <ChartComponent
+                        aria-label="Collatz sequence chart"
+                        role="img"
+                        data={chartData}
+                        options={chartOptions}
+                      />
+                    </figure>
                   </div>
                 </div>
               </form>
@@ -560,6 +607,7 @@ function App() {
         </div>
       </div>
     </div>
+    </>
   )
 }
 

@@ -1,0 +1,17 @@
+{
+  "name": "Collatz Conjecture Explorer",
+  "short_name": "Collatz Explorer",
+  "description": "Interactive Collatz Conjecture visualizer and mathematics learning tool.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020817",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/icons.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
