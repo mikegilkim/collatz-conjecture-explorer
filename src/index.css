@@ -1,5 +1,5 @@
 :root {
-  font-family: Inter, 'Segoe UI', sans-serif;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color: rgba(255, 255, 255, 0.87);
@@ -11,14 +11,15 @@
 }
 
 html {
-  background: #020817;
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #020817 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 45%, #312e81 100%);
+  color: #e2e8f0;
 }
 
 * {
@@ -32,4 +33,9 @@ input {
 
 #root {
   min-height: 100vh;
+}
+
+::selection {
+  background: rgba(168, 85, 247, 0.35);
+  color: white;
 }

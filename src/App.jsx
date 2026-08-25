@@ -25,7 +25,6 @@ ChartJS.register(
 )
 
 const DEFAULT_DELAY = 500
-const QUICK_START_NUMBERS = [7, 27, 97, 123, 255]
 const chartPalette = ['#8b5cf6', '#60a5fa', '#34d399', '#f59e0b', '#f472b6']
 
 function generateCollatzSequence(startingNumber) {
@@ -53,7 +52,7 @@ function getAverageStepSize(sequence) {
 }
 
 function App() {
-  const [theme, setTheme] = useState('dark')
+  const [theme, setTheme] = useState('light')
   const [chartType, setChartType] = useState('line')
   const [inputValue, setInputValue] = useState('')
   const [sequence, setSequence] = useState([])
@@ -102,11 +101,6 @@ function App() {
   const isComplete = visibleSequence.length >= sequence.length && sequence.length > 0
   const statusLabel = !sequence.length ? 'Ready' : isPaused ? 'Paused' : isComplete ? 'Complete' : 'Running'
 
-  const chartSurface = isDark
-    ? 'bg-slate-900 text-slate-200 border-slate-700'
-    : 'bg-white text-slate-800 border-slate-200'
-
-  const onSurface = isDark ? 'bg-slate-900/80 text-slate-100' : 'bg-slate-100 text-slate-900'
   const mutedText = isDark ? 'text-slate-300' : 'text-slate-600'
   const subtle = isDark ? 'bg-slate-800/70 border-slate-700' : 'bg-white/80 border-slate-200'
   const soft = isDark ? 'bg-slate-800/80 border-slate-700' : 'bg-slate-50 border-slate-200'
@@ -267,12 +261,6 @@ function App() {
     setInputValue('')
   }
 
-  const handleQuickStart = (value) => {
-    setInputValue(String(value))
-    setErrorMessage('')
-    setShareMessage('')
-  }
-
   const handleAddComparison = () => {
     if (!sequence.length) {
       return
@@ -364,14 +352,13 @@ function App() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <div className={`min-h-screen px-4 py-8 transition-colors duration-300 ${isDark ? 'bg-[radial-gradient(circle_at_top,_rgba(139,92,246,0.18),_transparent_35%),linear-gradient(135deg,#020817_0%,#0f172a_40%,#111827_100%)] text-slate-100' : 'bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.12),_transparent_35%),linear-gradient(135deg,#f8fafc_0%,#eef2ff_40%,#f8fafc_100%)] text-slate-800'}`}>
-      <div className="mx-auto max-w-7xl">
-        <div className={`overflow-hidden rounded-[32px] border p-4 shadow-2xl backdrop-blur-xl sm:p-6 lg:p-8 ${isDark ? 'border-slate-700/80 bg-slate-900/70 shadow-violet-950/30' : 'border-slate-200 bg-white/80 shadow-slate-200/80'}`}>
-          <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="mx-auto max-w-7xl space-y-6">
+          <header className="flex flex-col gap-4 pt-2 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className={`text-[10px] font-semibold uppercase tracking-[0.28em] ${isDark ? 'text-violet-300' : 'text-violet-600'}`}>
+              <p className={`text-[10px] font-semibold uppercase tracking-[0.32em] ${isDark ? 'text-violet-300' : 'text-violet-600'}`}>
                 Number Theory Visualizer
               </p>
-              <h1 className={`mt-2 text-3xl font-semibold tracking-tight sm:text-4xl ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <h1 className={`mt-2 text-3xl font-black tracking-tight sm:text-4xl ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 Collatz Conjecture Explorer
               </h1>
             </div>
@@ -379,14 +366,14 @@ function App() {
             <button
               type="button"
               onClick={() => setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'))}
-              className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-all duration-200 ${secondaryButton}`}
+              className={`control-button inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-all duration-200 ${secondaryButton}`}
             >
               <span>{isDark ? '☀' : '☾'}</span>
               {isDark ? 'Light mode' : 'Dark mode'}
             </button>
           </header>
 
-          <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-slate-500/10 bg-slate-500/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className={`rounded-2xl border p-3 shadow-sm sm:p-4 ${subtle}`}>
             <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
               <div className="flex-1">
                 <label htmlFor="starting-number" className={`mb-2 block text-sm font-medium ${mutedText}`}>
@@ -423,25 +410,25 @@ function App() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <button type="submit" form="collatz-form" className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition hover:-translate-y-0.5 ${buttonPrimary}`}>
+              <button type="submit" form="collatz-form" className={`control-button inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold ${buttonPrimary}`}>
                 ▶ Run
               </button>
-              <button type="button" onClick={handlePause} disabled={!sequence.length || isPaused || isComplete} className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${secondaryButton}`}>
+              <button type="button" onClick={handlePause} disabled={!sequence.length || isPaused || isComplete} className={`control-button inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${secondaryButton}`}>
                 ⏸ Pause
               </button>
-              <button type="button" onClick={handleResume} disabled={!isPaused || isComplete} className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${secondaryButton}`}>
+              <button type="button" onClick={handleResume} disabled={!isPaused || isComplete} className={`control-button inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${secondaryButton}`}>
                 ⏯ Resume
               </button>
-              <button type="button" onClick={handleReset} disabled={!sequence.length && !inputValue.length} className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${secondaryButton}`}>
+              <button type="button" onClick={handleReset} disabled={!sequence.length && !inputValue.length} className={`control-button inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${secondaryButton}`}>
                 🔄 Reset
               </button>
-              <button type="button" onClick={handleExportCsv} disabled={!sequence.length} className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${secondaryButton}`}>
+              <button type="button" onClick={handleExportCsv} disabled={!sequence.length} className={`control-button inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${secondaryButton}`}>
                 ⬇ CSV
               </button>
-              <button type="button" onClick={handleExportJson} disabled={!sequence.length} className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${secondaryButton}`}>
+              <button type="button" onClick={handleExportJson} disabled={!sequence.length} className={`control-button inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${secondaryButton}`}>
                 ⬇ JSON
               </button>
-              <button type="button" onClick={handleShare} disabled={!sequence.length} className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${secondaryButton}`}>
+              <button type="button" onClick={handleShare} disabled={!sequence.length} className={`control-button inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${secondaryButton}`}>
                 ↗ Share
               </button>
             </div>
@@ -502,21 +489,21 @@ function App() {
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-4">
-                  <div className={`rounded-2xl border p-4 ${soft}`}>
+                  <div className={`metric-card ${isDark ? '' : 'light'} rounded-2xl p-4`}>
                     <p className={`text-[10px] uppercase tracking-[0.22em] ${mutedText}`}>Steps</p>
-                    <p className={`mt-2 text-2xl font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{totalSteps}</p>
+                    <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{totalSteps}</p>
                   </div>
-                  <div className={`rounded-2xl border p-4 ${soft}`}>
+                  <div className={`metric-card ${isDark ? '' : 'light'} rounded-2xl p-4`}>
                     <p className={`text-[10px] uppercase tracking-[0.22em] ${mutedText}`}>Max</p>
-                    <p className={`mt-2 text-2xl font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{maxValue}</p>
+                    <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{maxValue}</p>
                   </div>
-                  <div className={`rounded-2xl border p-4 ${soft}`}>
+                  <div className={`metric-card ${isDark ? '' : 'light'} rounded-2xl p-4`}>
                     <p className={`text-[10px] uppercase tracking-[0.22em] ${mutedText}`}>Avg</p>
-                    <p className={`mt-2 text-2xl font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{averageStepSize.toFixed(1)}</p>
+                    <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{averageStepSize.toFixed(1)}</p>
                   </div>
-                  <div className={`rounded-2xl border p-4 ${soft}`}>
+                  <div className={`metric-card ${isDark ? '' : 'light'} rounded-2xl p-4`}>
                     <p className={`text-[10px] uppercase tracking-[0.22em] ${mutedText}`}>Current</p>
-                    <p className={`mt-2 text-2xl font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{visibleSequence[visibleSequence.length - 1] ?? 0}</p>
+                    <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{visibleSequence[visibleSequence.length - 1] ?? 0}</p>
                   </div>
                 </div>
 
@@ -572,7 +559,7 @@ function App() {
             </section>
           </div>
 
-          <section className={`mt-6 rounded-2xl border p-4 shadow-sm ${subtle}`}>
+          <section className={`rounded-2xl border p-4 shadow-sm ${subtle}`}>
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Sequence</h2>
               <span className={`text-sm ${mutedText}`}>{sequence.length ? '4 → 2 → 1 loop' : 'Waiting for input'}</span>
@@ -587,11 +574,11 @@ function App() {
                       return (
                         <div key={`${value}-${index}`} className="flex items-center gap-2 transition-all duration-300">
                           <span
-                            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-sm font-medium transition ${
+                            className={`sequence-pill inline-flex items-center rounded-full border px-2.5 py-1 text-sm font-medium ${
                               isCurrent
                                 ? isDark
-                                  ? 'border-violet-400 bg-violet-500/20 text-violet-100 shadow-[0_0_15px_rgba(168,85,247,0.35)]'
-                                  : 'border-violet-400 bg-violet-100 text-violet-700 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
+                                  ? 'border-violet-400 bg-violet-500/20 text-violet-100 shadow-[0_0_18px_rgba(168,85,247,0.4)]'
+                                  : 'border-violet-400 bg-violet-100 text-violet-700 shadow-[0_0_18px_rgba(168,85,247,0.25)]'
                                 : isDark
                                   ? 'border-slate-700 bg-slate-800/80 text-slate-200'
                                   : 'border-slate-200 bg-white text-slate-700'
@@ -608,18 +595,29 @@ function App() {
             </div>
           </section>
 
-          <footer className="mt-6 flex justify-center">
+          <footer className="pointer-events-none fixed bottom-6 right-6 z-50 flex items-center gap-3">
+            <a
+              href="https://github.com/mikegilkim/collatz-conjecture-explorer"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="View the Collatz Conjecture Explorer GitHub repository"
+              className={`social-link pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full border text-lg font-bold shadow-lg ${isDark ? 'border-violet-500/30 bg-slate-900/80 text-violet-200 hover:border-violet-400 hover:bg-violet-500/10 hover:text-white' : 'border-violet-200 bg-white text-violet-700 hover:border-violet-400 hover:bg-violet-50 hover:text-violet-900'}`}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
+                <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2.14c-3.2.7-3.87-1.37-3.87-1.37-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.18 1.77 1.18 1.03 1.76 2.7 1.25 3.36.95.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.25.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.94 10.94 0 0 1 5.74 0c2.19-1.49 3.15-1.18 3.15-1.18.62 1.59.23 2.76.11 3.05.74.8 1.18 1.83 1.18 3.08 0 4.41-2.69 5.38-5.26 5.67.41.36.77 1.07.77 2.16v3.2c0 .31.21.68.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z" />
+              </svg>
+            </a>
+
             <a
               href="https://www.facebook.com/mikegilkim"
               target="_blank"
               rel="noreferrer"
-              className={`group inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${isDark ? 'border-violet-500/30 bg-slate-900/70 text-violet-200 hover:border-violet-400 hover:bg-violet-500/10 hover:text-white' : 'border-violet-200 bg-white text-violet-700 hover:border-violet-400 hover:bg-violet-50 hover:text-violet-900'}`}
+              aria-label="Visit Mike Gil Kim on Facebook"
+              className={`social-link pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full border text-lg font-bold shadow-lg ${isDark ? 'border-violet-500/30 bg-slate-900/80 text-violet-200 hover:border-violet-400 hover:bg-violet-500/10 hover:text-white' : 'border-violet-200 bg-white text-violet-700 hover:border-violet-400 hover:bg-violet-50 hover:text-violet-900'}`}
             >
-              <span className="text-base transition-transform duration-300 group-hover:scale-110">f</span>
-              <span>Facebook</span>
+              <span className="transition-transform duration-300 group-hover:scale-110">f</span>
             </a>
           </footer>
-        </div>
       </div>
     </div>
     </>
