@@ -93,8 +93,6 @@ function App() {
   const [comparisonRuns, setComparisonRuns] = useState([])
   const [comparisonInput, setComparisonInput] = useState('')
   const [favoriteNumbers, setFavoriteNumbers] = useState([])
-  const [challengeGuess, setChallengeGuess] = useState('')
-  const [challengeSolved, setChallengeSolved] = useState(false)
   const [explanationMode, setExplanationMode] = useState(true)
   const [rangeStart, setRangeStart] = useState(1)
   const [rangeEnd, setRangeEnd] = useState(20)
@@ -319,8 +317,6 @@ function App() {
     setSequence(nextSequence)
     setVisibleSequence([nextSequence[0]])
     setIsPaused(false)
-    setChallengeSolved(false)
-    setChallengeGuess('')
   }
 
   const handlePause = () => setIsPaused(true)
@@ -334,8 +330,6 @@ function App() {
     setErrorMessage('')
     setShareMessage('')
     setInputValue('')
-    setChallengeSolved(false)
-    setChallengeGuess('')
     window.history.replaceState({}, '', window.location.pathname)
   }
 
@@ -647,35 +641,6 @@ function App() {
                 </button>
               </div>
 
-              <div className={`mt-5 rounded-2xl border p-4 ${soft}`}>
-                <h3 className={`mb-2 text-sm font-semibold uppercase tracking-[0.2em] ${isDark ? 'text-violet-200' : 'text-violet-700'}`}>
-                  Challenge mode
-                </h3>
-                <div className="space-y-3">
-                  <p className={`text-xs ${mutedText}`}>
-                    Guess how many steps the current sequence takes before it reaches 1.
-                  </p>
-                  <input
-                    type="number"
-                    value={challengeGuess}
-                    onChange={(event) => setChallengeGuess(event.target.value)}
-                    placeholder="Your guess"
-                    className={`w-full rounded-xl border px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-violet-500/40 ${isDark ? 'border-slate-700 bg-slate-950/60 text-white' : 'border-slate-200 bg-slate-50 text-slate-900'}`}
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setChallengeSolved(true)}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-medium ${secondaryButton}`}
-                    >
-                      Reveal
-                    </button>
-                    <span className={`text-xs ${mutedText}`}>
-                      {challengeSolved ? `Answer: ${totalSteps}` : `Target: ${totalSteps || '—'}`}
-                    </span>
-                  </div>
-                </div>
-              </div>
             </aside>
 
             <section className={`rounded-2xl border p-5 shadow-sm ${subtle}`} aria-labelledby="sequence-overview-title">
@@ -755,7 +720,13 @@ function App() {
                 <div className={`rounded-2xl border p-4 ${soft}`}>
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <h3 className={`text-base font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>Sequence trend</h3>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <button type="button" onClick={handleExportPng} disabled={!sequence.length} className={`rounded-full border px-2.5 py-1.5 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${secondaryButton}`}>
+                        Export PNG
+                      </button>
+                      <button type="button" onClick={handleExportSvg} disabled={!sequence.length} className={`rounded-full border px-2.5 py-1.5 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${secondaryButton}`}>
+                        Export SVG
+                      </button>
                       <button
                         type="button"
                         onClick={handleAddComparison}
@@ -831,14 +802,6 @@ function App() {
           <div className={`rounded-2xl border p-4 shadow-sm ${subtle}`}>
             <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Analysis</h2>
-              <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={handleExportPng} disabled={!sequence.length} className={`rounded-full border px-3 py-1.5 text-xs font-medium ${secondaryButton}`}>
-                  Export PNG
-                </button>
-                <button type="button" onClick={handleExportSvg} disabled={!sequence.length} className={`rounded-full border px-3 py-1.5 text-xs font-medium ${secondaryButton}`}>
-                  Export SVG
-                </button>
-              </div>
             </div>
 
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
