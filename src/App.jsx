@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   BarElement,
   CategoryScale,
@@ -13,19 +13,11 @@ import {
 import { Bar, Line } from 'react-chartjs-2'
 import './App.css'
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend)
 
 const DEFAULT_DELAY = 500
 const chartPalette = ['#8b5cf6', '#60a5fa', '#34d399', '#f59e0b', '#f472b6']
+const FAVORITES_KEY = 'collatz-favorites'
 
 function generateCollatzSequence(startingNumber) {
   if (!Number.isInteger(startingNumber) || startingNumber <= 0) {
@@ -51,6 +43,47 @@ function getAverageStepSize(sequence) {
   return sequence.reduce((sum, value) => sum + value, 0) / sequence.length
 }
 
+function getSequenceAnalysis(sequence) {
+  const stepDetails = []
+  let oddSteps = 0
+  let evenSteps = 0
+  let longestPlateau = 0
+  let currentPlateau = 0
+
+  for (let index = 0; index < sequence.length - 1; index += 1) {
+    const current = sequence[index]
+    const next = sequence[index + 1]
+
+    if (current % 2 === 0) {
+      evenSteps += 1
+      currentPlateau += 1
+      longestPlateau = Math.max(longestPlateau, currentPlateau)
+      stepDetails.push({
+        index,
+        current,
+        next,
+        rule: 'Even → divide by 2',
+      })
+    } else {
+      oddSteps += 1
+      currentPlateau = 0
+      stepDetails.push({
+        index,
+        current,
+        next,
+        rule: 'Odd → 3n + 1',
+      })
+    }
+  }
+
+  return {
+    oddSteps,
+    evenSteps,
+    longestPlateau,
+    stepDetails,
+  }
+}
+
 function App() {
   const [theme, setTheme] = useState('light')
   const [chartType, setChartType] = useState('line')
@@ -58,10 +91,43 @@ function App() {
   const [sequence, setSequence] = useState([])
   const [visibleSequence, setVisibleSequence] = useState([])
   const [comparisonRuns, setComparisonRuns] = useState([])
+  const [comparisonInput, setComparisonInput] = useState('')
+  const [favoriteNumbers, setFavoriteNumbers] = useState([])
+  const [challengeGuess, setChallengeGuess] = useState('')
+  const [challengeSolved, setChallengeSolved] = useState(false)
+  const [explanationMode, setExplanationMode] = useState(true)
+  const [rangeStart, setRangeStart] = useState(1)
+  const [rangeEnd, setRangeEnd] = useState(20)
+  const [batchData, setBatchData] = useState([])
   const [isPaused, setIsPaused] = useState(false)
   const [animationDelay, setAnimationDelay] = useState(DEFAULT_DELAY)
   const [errorMessage, setErrorMessage] = useState('')
   const [shareMessage, setShareMessage] = useState('')
+
+  const chartRef = useRef(null)
+
+  useEffect(() => {
+    const savedFavorites = window.localStorage.getItem(FAVORITES_KEY)
+    if (savedFavorites) {
+      try {
+        const parsed = JSON.parse(savedFavorites)
+        if (Array.isArray(parsed)) {
+          setFavoriteNumbers(parsed.filter((value) => Number.isInteger(value) && value > 0).slice(0, 6))
+        }
+      } catch {
+        window.localStorage.removeItem(FAVORITES_KEY)
+      }
+    }
+
+    const params = new URLSearchParams(window.location.search)
+    const startValue = params.get('start')
+    if (startValue) {
+      const parsed = Number(startValue)
+      if (Number.isInteger(parsed) && parsed > 0) {
+        setInputValue(String(parsed))
+      }
+    }
+  }, [])
 
   const structuredData = useMemo(
     () => ({
@@ -70,7 +136,7 @@ function App() {
       name: 'Collatz Conjecture Explorer',
       description:
         'Interactive number theory visualizer that explores the Collatz Conjecture, sequence behavior, and famous mathematics problem in plain language.',
-      url: 'https://collatz-conjecture-explorer-b6nelo0eo-mikegilkims-projects.vercel.app',
+      url: 'https://collatz-conjecture-explorer-eta.vercel.app',
       applicationCategory: 'EducationalApplication',
       operatingSystem: 'Web',
       inLanguage: 'en',
@@ -100,6 +166,7 @@ function App() {
   const totalSteps = Math.max(sequence.length - 1, 0)
   const isComplete = visibleSequence.length >= sequence.length && sequence.length > 0
   const statusLabel = !sequence.length ? 'Ready' : isPaused ? 'Paused' : isComplete ? 'Complete' : 'Running'
+  const analysis = useMemo(() => getSequenceAnalysis(sequence), [sequence])
 
   const mutedText = isDark ? 'text-slate-300' : 'text-slate-600'
   const subtle = isDark ? 'bg-slate-800/70 border-slate-700' : 'bg-white/80 border-slate-200'
@@ -230,7 +297,9 @@ function App() {
   )
 
   const handleRun = (event) => {
-    event.preventDefault()
+    if (event) {
+      event.preventDefault()
+    }
 
     const parsedValue = Number(inputValue)
 
@@ -240,12 +309,18 @@ function App() {
     }
 
     const nextSequence = generateCollatzSequence(parsedValue)
+    const params = new URLSearchParams(window.location.search)
+    params.set('start', String(parsedValue))
+    const nextSearch = params.toString()
+    window.history.replaceState({}, '', `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}`)
 
     setErrorMessage('')
     setShareMessage('')
     setSequence(nextSequence)
     setVisibleSequence([nextSequence[0]])
     setIsPaused(false)
+    setChallengeSolved(false)
+    setChallengeGuess('')
   }
 
   const handlePause = () => setIsPaused(true)
@@ -259,6 +334,9 @@ function App() {
     setErrorMessage('')
     setShareMessage('')
     setInputValue('')
+    setChallengeSolved(false)
+    setChallengeGuess('')
+    window.history.replaceState({}, '', window.location.pathname)
   }
 
   const handleAddComparison = () => {
@@ -269,10 +347,10 @@ function App() {
     setComparisonRuns((runs) => [
       ...runs,
       {
-        label: `Compare ${runs.length + 1}`,
+        label: `${sequence[0]} run`,
         data: sequence,
       },
-    ])
+    ].slice(-4))
   }
 
   const handleResetComparison = () => setComparisonRuns([])
@@ -320,30 +398,91 @@ function App() {
     downloadBlob(`collatz-${sequence[0]}.json`, json, 'application/json;charset=utf-8;')
   }
 
+  const handleExportPng = () => {
+    if (!sequence.length || !chartRef.current) {
+      return
+    }
+
+    const canvas = chartRef.current.canvas || chartRef.current?.chart?.canvas
+    if (!canvas) {
+      return
+    }
+
+    const image = canvas.toDataURL('image/png')
+    const link = document.createElement('a')
+    link.href = image
+    link.download = `collatz-${sequence[0]}.png`
+    link.click()
+  }
+
+  const handleExportSvg = () => {
+    if (!sequence.length) {
+      return
+    }
+
+    const width = 800
+    const height = 320
+    const margin = { top: 24, right: 20, bottom: 30, left: 40 }
+    const innerWidth = width - margin.left - margin.right
+    const innerHeight = height - margin.top - margin.bottom
+    const maxY = Math.max(...sequence, 1)
+
+    const points = sequence
+      .map((value, index) => {
+        const x = margin.left + (index / Math.max(sequence.length - 1, 1)) * innerWidth
+        const y = margin.top + innerHeight - (value / maxY) * innerHeight
+        return `${x},${y}`
+      })
+      .join(' ')
+
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+        <rect width="100%" height="100%" fill="#ffffff"/>
+        <polyline fill="none" stroke="#7c3aed" stroke-width="3" points="${points}"/>
+      </svg>
+    `
+
+    downloadBlob(`collatz-${sequence[0]}.svg`, svg, 'image/svg+xml;charset=utf-8;')
+  }
+
   const handleShare = async () => {
     if (!sequence.length) {
       return
     }
 
-    const payload = {
-      startingNumber: sequence[0],
-      totalSteps,
-      maxValue,
-      averageStepSize,
-      chartType,
-      theme,
-      sequence,
-    }
-
-    const encoded = encodeURIComponent(JSON.stringify(payload))
-    const shareText = `${window.location.origin}${window.location.pathname}#collatz=${encoded}`
+    const shareUrl = `${window.location.origin}${window.location.pathname}?start=${sequence[0]}`
 
     try {
-      await navigator.clipboard.writeText(shareText)
+      await navigator.clipboard.writeText(shareUrl)
       setShareMessage('Share link copied to clipboard.')
     } catch {
-      setShareMessage('Copy failed. You can still export the JSON.')
+      setShareMessage('Copy failed. You can still export the PNG or JSON.')
     }
+  }
+
+  const handleRunRange = () => {
+    const safeStart = Number(rangeStart)
+    const safeEnd = Number(rangeEnd)
+
+    if (!Number.isInteger(safeStart) || !Number.isInteger(safeEnd) || safeStart <= 0 || safeEnd <= 0) {
+      setErrorMessage('Use valid positive integer start and end values.')
+      return
+    }
+
+    const start = Math.min(safeStart, safeEnd)
+    const end = Math.max(safeStart, safeEnd)
+    const results = []
+
+    for (let value = start; value <= end; value += 1) {
+      const seq = generateCollatzSequence(value)
+      results.push({
+        start: value,
+        steps: Math.max(seq.length - 1, 0),
+      })
+    }
+
+    setBatchData(results)
+    setErrorMessage('')
   }
 
   const ChartComponent = chartType === 'line' ? Line : Bar
@@ -352,7 +491,7 @@ function App() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <div className={`min-h-screen px-4 py-8 transition-colors duration-300 ${isDark ? 'bg-[radial-gradient(circle_at_top,_rgba(139,92,246,0.18),_transparent_35%),linear-gradient(135deg,#020817_0%,#0f172a_40%,#111827_100%)] text-slate-100' : 'bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.12),_transparent_35%),linear-gradient(135deg,#f8fafc_0%,#eef2ff_40%,#f8fafc_100%)] text-slate-800'}`}>
-      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="mx-auto max-w-7xl space-y-6">
           <header className="flex flex-col gap-4 pt-2 md:flex-row md:items-center md:justify-between">
             <div>
               <p className={`text-[10px] font-semibold uppercase tracking-[0.32em] ${isDark ? 'text-violet-300' : 'text-violet-600'}`}>
@@ -462,6 +601,81 @@ function App() {
                   </a>
                 </p>
               </div>
+
+              <div className={`mt-5 rounded-2xl border p-4 ${soft}`}>
+                <h3 className={`mb-2 text-sm font-semibold uppercase tracking-[0.2em] ${isDark ? 'text-violet-200' : 'text-violet-700'}`}>
+                  Favorites
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {favoriteNumbers.length ? (
+                    favoriteNumbers.map((number) => (
+                      <button
+                        key={number}
+                        type="button"
+                        onClick={() => {
+                          setInputValue(String(number))
+                          setErrorMessage('')
+                        }}
+                        className={`rounded-full border px-2.5 py-1.5 text-xs font-medium ${secondaryButton}`}
+                      >
+                        {number}
+                      </button>
+                    ))
+                  ) : (
+                    <p className={`text-xs ${mutedText}`}>Save a starting value to build a quick shortlist.</p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const parsed = Number(inputValue)
+                    if (!Number.isInteger(parsed) || parsed <= 0) {
+                      setErrorMessage('Choose a valid positive integer before saving.')
+                      return
+                    }
+
+                    setFavoriteNumbers((current) => {
+                      const next = [parsed, ...current.filter((item) => item !== parsed)]
+                      const trimmed = next.slice(0, 6)
+                      window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(trimmed))
+                      return trimmed
+                    })
+                  }}
+                  className={`mt-3 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium ${secondaryButton}`}
+                >
+                  Save current number
+                </button>
+              </div>
+
+              <div className={`mt-5 rounded-2xl border p-4 ${soft}`}>
+                <h3 className={`mb-2 text-sm font-semibold uppercase tracking-[0.2em] ${isDark ? 'text-violet-200' : 'text-violet-700'}`}>
+                  Challenge mode
+                </h3>
+                <div className="space-y-3">
+                  <p className={`text-xs ${mutedText}`}>
+                    Guess how many steps the current sequence takes before it reaches 1.
+                  </p>
+                  <input
+                    type="number"
+                    value={challengeGuess}
+                    onChange={(event) => setChallengeGuess(event.target.value)}
+                    placeholder="Your guess"
+                    className={`w-full rounded-xl border px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-violet-500/40 ${isDark ? 'border-slate-700 bg-slate-950/60 text-white' : 'border-slate-200 bg-slate-50 text-slate-900'}`}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setChallengeSolved(true)}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-medium ${secondaryButton}`}
+                    >
+                      Reveal
+                    </button>
+                    <span className={`text-xs ${mutedText}`}>
+                      {challengeSolved ? `Answer: ${totalSteps}` : `Target: ${totalSteps || '—'}`}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </aside>
 
             <section className={`rounded-2xl border p-5 shadow-sm ${subtle}`} aria-labelledby="sequence-overview-title">
@@ -488,7 +702,7 @@ function App() {
                   </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-4">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   <div className={`metric-card ${isDark ? '' : 'light'} rounded-2xl p-4`}>
                     <p className={`text-[10px] uppercase tracking-[0.22em] ${mutedText}`}>Steps</p>
                     <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{totalSteps}</p>
@@ -504,6 +718,25 @@ function App() {
                   <div className={`metric-card ${isDark ? '' : 'light'} rounded-2xl p-4`}>
                     <p className={`text-[10px] uppercase tracking-[0.22em] ${mutedText}`}>Current</p>
                     <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{visibleSequence[visibleSequence.length - 1] ?? 0}</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className={`rounded-2xl border p-3 ${soft}`}>
+                    <p className={`text-[10px] uppercase tracking-[0.2em] ${mutedText}`}>Growth</p>
+                    <p className={`mt-2 text-xl font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{sequence.length ? (maxValue / sequence[0]).toFixed(1) : '0.0'}x</p>
+                  </div>
+                  <div className={`rounded-2xl border p-3 ${soft}`}>
+                    <p className={`text-[10px] uppercase tracking-[0.2em] ${mutedText}`}>Odd</p>
+                    <p className={`mt-2 text-xl font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{sequence.length ? analysis.oddSteps : 0}</p>
+                  </div>
+                  <div className={`rounded-2xl border p-3 ${soft}`}>
+                    <p className={`text-[10px] uppercase tracking-[0.2em] ${mutedText}`}>Even</p>
+                    <p className={`mt-2 text-xl font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{sequence.length ? analysis.evenSteps : 0}</p>
+                  </div>
+                  <div className={`rounded-2xl border p-3 ${soft}`}>
+                    <p className={`text-[10px] uppercase tracking-[0.2em] ${mutedText}`}>Longest streak</p>
+                    <p className={`mt-2 text-xl font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{sequence.length ? analysis.longestPlateau : 0}</p>
                   </div>
                 </div>
 
@@ -541,12 +774,48 @@ function App() {
                       </button>
                     </div>
                   </div>
+                  <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <input
+                      type="text"
+                      value={comparisonInput}
+                      onChange={(event) => setComparisonInput(event.target.value)}
+                      placeholder="e.g. 7, 27, 97"
+                      className={`w-full rounded-xl border px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-violet-500/40 ${isDark ? 'border-slate-700 bg-slate-950/60 text-white' : 'border-slate-200 bg-slate-50 text-slate-900'}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const matches = comparisonInput
+                          .split(',')
+                          .map((value) => Number(value.trim()))
+                          .filter((value) => Number.isInteger(value) && value > 0)
+
+                        if (!matches.length) {
+                          setErrorMessage('Add one or more valid positive integers for comparison.')
+                          return
+                        }
+
+                        setErrorMessage('')
+                        const nextRuns = matches.map((value) => ({
+                          label: `Start ${value}`,
+                          data: generateCollatzSequence(value),
+                        }))
+
+                        setComparisonRuns((existing) => [...existing, ...nextRuns].slice(-4))
+                        setComparisonInput('')
+                      }}
+                      className={`rounded-xl border px-3 py-2 text-sm font-medium ${secondaryButton}`}
+                    >
+                      Add runs
+                    </button>
+                  </div>
                   <div className="h-80 w-full" aria-live="polite">
                     <figure className="h-full w-full">
                       <div className="sr-only" id="sequence-chart-description">
                         A chart showing the evolving values of the Collatz sequence for the selected starting number.
                       </div>
                       <ChartComponent
+                        ref={chartRef}
                         aria-label="Collatz sequence chart"
                         role="img"
                         data={chartData}
@@ -558,6 +827,120 @@ function App() {
               </form>
             </section>
           </div>
+
+          <div className={`rounded-2xl border p-4 shadow-sm ${subtle}`}>
+            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Analysis</h2>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={handleExportPng} disabled={!sequence.length} className={`rounded-full border px-3 py-1.5 text-xs font-medium ${secondaryButton}`}>
+                  Export PNG
+                </button>
+                <button type="button" onClick={handleExportSvg} disabled={!sequence.length} className={`rounded-full border px-3 py-1.5 text-xs font-medium ${secondaryButton}`}>
+                  Export SVG
+                </button>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <div className={`rounded-2xl border p-4 ${soft}`}>
+                <p className={`text-[10px] uppercase tracking-[0.2em] ${mutedText}`}>Batch range</p>
+                <div className="mt-2 flex gap-2">
+                  <input
+                    type="number"
+                    value={rangeStart}
+                    onChange={(event) => setRangeStart(Number(event.target.value) || 1)}
+                    className={`w-full rounded-lg border px-2 py-1.5 text-sm ${isDark ? 'border-slate-700 bg-slate-950/60 text-white' : 'border-slate-200 bg-slate-50 text-slate-900'}`}
+                  />
+                  <input
+                    type="number"
+                    value={rangeEnd}
+                    onChange={(event) => setRangeEnd(Number(event.target.value) || 10)}
+                    className={`w-full rounded-lg border px-2 py-1.5 text-sm ${isDark ? 'border-slate-700 bg-slate-950/60 text-white' : 'border-slate-200 bg-slate-50 text-slate-900'}`}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRunRange}
+                  className={`mt-3 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium ${secondaryButton}`}
+                >
+                  Analyze range
+                </button>
+              </div>
+
+              <div className={`rounded-2xl border p-4 ${soft}`}>
+                <p className={`text-[10px] uppercase tracking-[0.2em] ${mutedText}`}>Range peak</p>
+                <p className={`mt-2 text-xl font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  {batchData.length ? Math.max(...batchData.map((item) => item.steps)) : 0}
+                </p>
+              </div>
+
+              <div className={`rounded-2xl border p-4 ${soft}`}>
+                <p className={`text-[10px] uppercase tracking-[0.2em] ${mutedText}`}>Average range</p>
+                <p className={`mt-2 text-xl font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  {batchData.length ? (batchData.reduce((sum, item) => sum + item.steps, 0) / batchData.length).toFixed(1) : '0.0'}
+                </p>
+              </div>
+
+              <div className={`rounded-2xl border p-4 ${soft}`}>
+                <p className={`text-[10px] uppercase tracking-[0.2em] ${mutedText}`}>Rule snapshot</p>
+                <p className={`mt-2 text-sm font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  {sequence.length ? analysis.stepDetails[0]?.rule || 'Not available' : 'Waiting for input'}
+                </p>
+              </div>
+            </div>
+
+            {batchData.length ? (
+              <div className="mt-4 h-52 w-full">
+                <Bar
+                  data={{
+                    labels: batchData.map((item) => item.start),
+                    datasets: [{
+                      label: 'Steps to reach 1',
+                      data: batchData.map((item) => item.steps),
+                      backgroundColor: isDark ? 'rgba(139, 92, 246, 0.7)' : 'rgba(124, 58, 237, 0.7)',
+                      borderRadius: 6,
+                    }],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { display: false },
+                    },
+                  }}
+                />
+              </div>
+            ) : null}
+          </div>
+
+          <section className={`rounded-2xl border p-4 shadow-sm ${subtle}`}>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Step-by-step explanation</h2>
+              <button
+                type="button"
+                onClick={() => setExplanationMode((current) => !current)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium ${secondaryButton}`}
+              >
+                {explanationMode ? 'Hide rules' : 'Show rules'}
+              </button>
+            </div>
+
+            {explanationMode && sequence.length ? (
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {analysis.stepDetails.slice(0, 12).map((step) => (
+                  <div key={`${step.current}-${step.index}`} className={`rounded-2xl border p-3 ${soft}`}>
+                    <p className={`text-[10px] uppercase tracking-[0.2em] ${mutedText}`}>Step {step.index + 1}</p>
+                    <p className={`mt-2 text-sm font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      {step.current} → {step.next}
+                    </p>
+                    <p className={`mt-1 text-xs ${mutedText}`}>{step.rule}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className={`text-sm ${mutedText}`}>Run a number to reveal the rule applied at each step.</p>
+            )}
+          </section>
 
           <section className={`rounded-2xl border p-4 shadow-sm ${subtle}`}>
             <div className="mb-3 flex items-center justify-between gap-3">
@@ -618,8 +1001,8 @@ function App() {
               <span className="transition-transform duration-300 group-hover:scale-110">f</span>
             </a>
           </footer>
+        </div>
       </div>
-    </div>
     </>
   )
 }
