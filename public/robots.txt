@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://collatz-conjecture-explorer-b6nelo0eo-mikegilkims-projects.vercel.app/sitemap.xml
+Sitemap: https://collatz-conjecture-explorer-1b6rh9ooo-mikegilkims-projects.vercel.app/sitemap.xml
